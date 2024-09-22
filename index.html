@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href={{ url_for('static', filename='css/main.css') }}>
+    <title>Grade Calculator</title>
+</head>
+
+<body>
+
+    <h1>Grade Calculator</h1>
+
+    <p>Enter Prelim Grade:</p>
+    
+    
+    <form action="/" method="POST">
+        <input type="text" id="txtPrelim" name="txtPrelim" placeholder="Enter your your prelim grade"> </input>
+        <button type="submit" id="calculate">Calculate</button>
+    </form>
+
+    <div id="results">
+        <p>Prelim Grade: <span id="displayPrelim">{{ prelim_grade }}</span></p>
+        <p>Required Midterm Grade: <span id="reqMidterm">{{ req_midterm }}</span></p>
+        <p>Required Final Grade: <span id="reqFinal">{{ req_final  }}</span></p>
+        <p id="passMessage" style="display: {{ 'block' if pass_message else 'none' }}">You have a chance to pass!</p>
+        <p id="difficultMessage" style="display: {{ 'block' if difficult_message else 'none' }}">It is difficult to pass.</p>
+        <p id ="dealListersInfo" style="display: {{ 'block' if dean_message else 'none' }};">The required grade for you to be a Dean’s Lister is <span id="deanMidterm">{{dean_midterm}}</span> (midterm) and <span id="deanFinal">{{dean_finals}}</span> (finals).</p>
+        <p id="invalidNumber" style="display: {{ 'block' if invalid_number else 'none' }}">Please input valid number! Please enter between 0 to 100 only! </p>
+    </div>
+
+</body>
+</html>
