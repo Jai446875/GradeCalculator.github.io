@@ -1,112 +1,64 @@
-from flask import Flask, render_template, request
-
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-@app.route('/', methods = ['POST','GET'])
-    
-
-
+# Route for the main page
+@app.route('/')
 def index():
-    # Initialize variables
-    prelim_grade = 0.00
-    req_midterm = 0.00
-    req_final = 0.00
-    temp_prelim = 0.00
-    dean_midterm = 0.00
-    dean_finals = 0.00
-    max = 100.0
+    return render_template('index.html')
 
-    temp_grade2 = 0.00
-    temp_midtermLower = 0.00
-    temp_finalLower = 0.00
+# Route for handling the grade calculation
+@app.route('/calculate', methods=['POST'])
+def calculate():
+    try:
+        # Retrieve the form data from the request
+        absences = int(request.form['attendance_absences'])
+        quiz = float(request.form['quiz_score'])
+        requirements = float(request.form['requirements_grade'])
+        recitation = float(request.form['recitation_score'])
+        exam = float(request.form['prelim_exam_score'])
 
-    pass_message = False
-    difficult_message = False
-    dean_message = False
-    invalid_number = False
+        # Define the helper functions for grade calculation
+        def calculate_attendance(absences):
+            if absences < 0 or absences > 4:
+                return None
+            if absences >= 4:
+                return "FAILED"
+            return max(0, 100 - (absences * 10))
 
-    
-    
+        def compute_class_standing(quiz, requirements, recitation):
+            return (quiz * 0.40) + (requirements * 0.30) + (recitation * 0.30)
 
-    if request.method == 'POST':
+        def compute_prelim_grade(absences, quiz, requirements, recitation, exam):
+            attendance_score = calculate_attendance(absences)
+            if isinstance(attendance_score, str):
+                return attendance_score
+            class_standing = compute_class_standing(quiz, requirements, recitation)
+            return (exam * 0.60) + (attendance_score * 0.10) + (class_standing * 0.30)
 
-        # Get the prelim grade from the form
-        prelim_grade = request.form.get('txtPrelim')
-        
+        def grades_needed(prelim_grade, target):
+            midterm_needed = (target - (prelim_grade * 0.20)) / 0.80
+            final_needed = (target - (prelim_grade * 0.20)) / 0.80
+            return midterm_needed, final_needed
 
+        # Calculate the prelim grade
+        prelim_grade = compute_prelim_grade(absences, quiz, requirements, recitation, exam)
 
-        if prelim_grade.isdigit():
+        # Prepare the output messages
+        if isinstance(prelim_grade, str):
+            return jsonify({"error": prelim_grade})
 
-            prelim_grade = float(prelim_grade) 
+        output_message = f"Prelim Grade: {prelim_grade:.2f}"
+        pass_midterm, pass_final = grades_needed(prelim_grade, 75)
+        dean_midterm, dean_final = grades_needed(prelim_grade, 90)
 
-            if prelim_grade >= 0 and prelim_grade <= 100:    
+        output_message += f"\nTo pass with 75%, you need a Midterm grade of {pass_midterm:.2f} and a Final grade of {pass_final:.2f}."
+        output_message += f"\nTo achieve 90%, you need a Midterm grade of {dean_midterm:.2f} and a Final grade of {dean_final:.2f}."
 
-                try:
+        return jsonify({"result": output_message})
 
-                    temp_prelim = round(prelim_grade * 0.20,2)
+    except ValueError as e:
+        return jsonify({"error": str(e)})
 
-
-                    counter = 0
-                        
-                    while counter == 0: #using brute force to find midterm and finals based on grade composition midterm: 30% and finals: 50%
-                        temp_midterm = round(max * 0.30,2)
-                        temp_final = round(max * 0.50,2)
-
-                        temp_grade = round(temp_midterm + temp_final,2)
-                        temp_grade = round(temp_grade + temp_prelim,2)
-
-                        if temp_grade == 75.0 and max >= 0:
-                            req_midterm = round(temp_midterm / 0.30,2)
-                            req_final = round(temp_final / 0.50, 2)
-                                
-                            counter = 1  
-                        elif temp_grade < 75.0 and max >= 0:
-                            #print(temp_grade2)
-
-                            #print(temp_midterm)
-                            #print(temp_midtermLower)
-                            req_midterm = round(temp_midtermLower / 0.30,2)
-                            req_final = round(temp_finalLower / 0.50, 2)
-
-                            counter = 1  
-                        elif temp_grade >= 90.0 and max >= 0:
-                            req_midterm = round(temp_midterm / 0.30,2)
-                            req_final = round(temp_final / 0.50, 2)
-                            
-                            dean_midterm = req_midterm
-                            dean_finals = req_midterm
-
-                            max = max - 0.01
-
-                            continue 
-
-                        else:
-                            max = max - 0.01
-                            
-                        #this is to get the value before < 75
-                        temp_grade2 = temp_grade 
-                        temp_midtermLower = temp_midterm
-                        temp_finalLower = temp_final
-                        #-----------------------------------
-
-                        if req_midterm <= 75 and req_final <= 75:
-                            pass_message = True 
-                            difficult_message = False 
-                            dean_message = True
-                        else:
-                            difficult_message = True  
-                            pass_message = False
-                            dean_message = True
-                        
-                except ValueError:
-                    return "Please enter a valid number."
-            else:
-               invalid_number = True     
-        else:
-            invalid_number = True
-
-    return render_template('index.html', prelim_grade=prelim_grade, req_midterm=req_midterm, req_final=req_final,dean_midterm=dean_midterm,dean_finals=dean_finals,pass_message=pass_message, difficult_message=difficult_message, dean_message = dean_message,invalid_number=invalid_number)
-    
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
