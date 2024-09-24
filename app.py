@@ -20,66 +20,6 @@ def grades_needed(prelim_grade, target):
     final_needed = (target - (prelim_grade * 0.20)) / 0.80
     return midterm_needed, final_needed
 
-def calculate_grades(prelim_grade):
-    # Constants
-    max_score = 100.0
-
-    # Initialize variables
-    req_midterm = 0.0
-    req_final = 0.0
-    dean_midterm = 0.0
-    dean_finals = 0.0
-    pass_message = False
-    difficult_message = False
-    dean_message = False
-
-    if prelim_grade >= 0 and prelim_grade <= 100:
-        try:
-            temp_prelim = round(prelim_grade * 0.20, 2)
-
-            counter = 0
-            while counter == 0:  # Using brute force to find midterm and finals
-                temp_midterm = round(max_score * 0.30, 2)
-                temp_final = round(max_score * 0.50, 2)
-
-                temp_grade = round(temp_midterm + temp_final + temp_prelim, 2)
-
-                if temp_grade >= 75.0:
-                    req_midterm = round(temp_midterm / 0.30, 2)
-                    req_final = round(temp_final / 0.50, 2)
-                    counter = 1
-                elif temp_grade < 75.0:
-                    req_midterm = round(temp_midterm / 0.30, 2)
-                    req_final = round(temp_final / 0.50, 2)
-                    counter = 1
-                elif temp_grade >= 90.0:
-                    req_midterm = round(temp_midterm / 0.30, 2)
-                    req_final = round(temp_final / 0.50, 2)
-                    dean_midterm = req_midterm
-                    dean_finals = req_final
-
-                    max_score -= 0.01
-                    continue
-                else:
-                    max_score -= 0.01
-
-            if req_midterm <= 75 and req_final <= 75:
-                pass_message = True
-                difficult_message = False
-                dean_message = True
-            else:
-                difficult_message = True
-                pass_message = False
-                dean_message = True
-
-        except ValueError:
-            st.error("Please enter a valid number.")
-    else:
-        st.warning("Please enter a number between 0 and 100.")
-
-    return req_midterm, req_final, dean_midterm, dean_finals, pass_message, difficult_message, dean_message
-
-
 # Streamlit UI
 st.title("Prelim Grade Calculator")
 
@@ -98,10 +38,11 @@ if st.button("Calculate Final Grade"):
         if prelim_grade < 75:
             midterm, final = grades_needed(prelim_grade, 75)
             st.write(f"To pass with 75%, you need a Midterm grade of {midterm:.2f} and a Final grade of {final:.2f}.")
-            midterm_dean, final_dean = grades_needed(prelim_grade, 90)
-            st.write(f"To achieve 90%, you need a Midterm grade of {midterm_dean:.2f} and a Final grade of {final_dean:.2f}.")
         else:
             st.write("You've passed! Keep it up!")
+        
+        midterm_dean, final_dean = grades_needed(prelim_grade, 90)
+        st.write(f"To achieve 90% (Dean's List), you need a Midterm grade of {midterm_dean:.2f} and a Final grade of {final_dean:.2f}.")
     else:
         st.write("Invalid number of absences.")
 
