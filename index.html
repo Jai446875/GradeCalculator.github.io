@@ -1,33 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href={{ url_for('static', filename='css/main.css') }}>
-    <title>Grade Calculator</title>
+    <title>Prelim Calculator</title>
+    <link rel="stylesheet" href="main.css">
 </head>
-
 <body>
+    <div id="container">
+        <h1>Preliminary Grade Calculator</h1>
 
-    <h1>Grade Calculator</h1>
+        <!-- Form for absences -->
+        <form id="gradeForm">
+            <label for="attendance_absences">Number of Consecutive Absences:</label>
+            <input type="number" id="attendance_absences" value="0" min="0" max="4" placeholder="Enter Number of Absences">
 
-    <p>Enter Prelim Grade:</p>
-    
-    
-    <form action="/" method="POST">
-        <input type="text" id="txtPrelim" name="txtPrelim" placeholder="Enter your your prelim grade"> </input>
-        <button type="submit" id="calculate">Calculate</button>
-    </form>
+            <label for="recitation_score">Recitation Score:</label>
+            <input type="number" id="recitation_score" min="0" max="100" placeholder="Enter Recitation Score">
 
-    <div id="results">
-        <p>Prelim Grade: <span id="displayPrelim">{{ prelim_grade }}</span></p>
-        <p>Required Midterm Grade: <span id="reqMidterm">{{ req_midterm }}</span></p>
-        <p>Required Final Grade: <span id="reqFinal">{{ req_final  }}</span></p>
-        <p id="passMessage" style="display: {{ 'block' if pass_message else 'none' }}">You have a chance to pass!</p>
-        <p id="difficultMessage" style="display: {{ 'block' if difficult_message else 'none' }}">It is difficult to pass.</p>
-        <p id ="dealListersInfo" style="display: {{ 'block' if dean_message else 'none' }};">The required grade for you to be a Dean’s Lister is <span id="deanMidterm">{{dean_midterm}}</span> (midterm) and <span id="deanFinal">{{dean_finals}}</span> (finals).</p>
-        <p id="invalidNumber" style="display: {{ 'block' if invalid_number else 'none' }}">Please input valid number! Please enter between 0 to 100 only! </p>
+            <label for="quiz_score">Quiz Score:</label>
+            <input type="number" id="quiz_score" min="0" max="100" placeholder="Enter Quiz Score">
+
+            <label for="requirements_grade">Requirements Grade:</label>
+            <input type="number" id="requirements_grade" min="0" max="100" placeholder="Enter Requirements Grade">
+
+            <label for="prelim_exam_score">Prelim Exam Score:</label>
+            <input type="number" id="prelim_exam_score" min="0" max="100" placeholder="Enter Prelim Exam Score">
+
+            <button type="button" id="calculate_button">Calculate Final Grade</button>
+        </form>
+
+        <!-- Result display -->
+        <div id="result" class="result"></div>
     </div>
 
+    <script>
+        document.getElementById('calculate_button').addEventListener('click', function() {
+            const formData = new FormData(document.getElementById('gradeForm'));
+            fetch('/calculate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                if (data.error) {
+                    resultDiv.textContent = 'Error: ' + data.error;
+                } else {
+                    resultDiv.textContent = data.result;
+                }
+            });
+        });
+    </script>
 </body>
 </html>
